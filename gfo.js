@@ -31,10 +31,22 @@ var fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
         "svg" : ".svg"
     },
     userAgents = [
+        // EOT lives in IE
         "Mozilla/5.0 (MSIE 9.0; Windows NT 6.1; Trident/5.0)",
+
+        // WOFF for Windows
         "Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1",
+        
+        // TTF needs Opera
         "Opera/9.80 (Macintosh; Intel Mac OS X; U; en) Presto/2.2.15 Version/10.00",
+
+        // SVG loves iPad
         "Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10"
+
+        // WOFF for *nix ("Mozilla/5.0 (Linux; Android 4.1.1; Nexus 7 Build/JRO03D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166  Safari/535.19")
+        // http://michaelboeke.com/blog/2013/09/10/Self-hosting-Google-web-fonts/
+
+        // WOFF2 for Chrome ("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103")
     ],
 
     fontfaceList = {},
