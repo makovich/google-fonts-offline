@@ -4,7 +4,7 @@
 var path = require('path'),
     fs = require('fs'),
     url = require('url'),
-    gfo = require(path.join(path.dirname(fs.realpathSync(__filename)), '../gfo.js')),
+    gfo = require(path.join(path.dirname(fs.realpathSync(__filename)), '../index.js')),
     urlToProcess;
 
 process.argv.forEach(function(arg) {
@@ -33,10 +33,10 @@ if (!urlToProcess) {
     console.log('  No job found. Use URL like it Google Fonts says as script argument.');
     console.log();
     console.log('  Usage:');
-    console.log('    node gfo.js fontUrl');
+    console.log('    goofoffline [outDir=fonts] [outCss=fonts.css] fontUrl');
     console.log();
     console.log('  Example:');
-    console.log('    node gfo.js "http://fonts.googleapis.com/css?family=Open+Sans|Roboto"');
+    console.log('    goofoffline "http://fonts.googleapis.com/css?family=Open+Sans|Roboto"');
     console.log();
 
     process.exit(0);
