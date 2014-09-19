@@ -22,7 +22,7 @@ var fs = require('fs'),
     scriptOutputDir = 'fonts',
     cssFilename = 'fonts.css',
 
-    fontFaceBulletproofStyle = fs.readFileSync('fontface.css.tpl').toString();
+    fontFaceBulletproofStyle = fs.readFileSync(path.join(path.dirname(fs.realpathSync(__filename)), 'fontface.css.tpl')).toString();
 
     fileExts = {
         "embedded-opentype" : ".eot",
