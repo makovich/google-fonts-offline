@@ -1,0 +1,45 @@
+#!/usr/bin/env node
+
+"use strict";
+var path = require('path'),
+    fs = require('fs'),
+    url = require('url'),
+    gfo = require(path.join(path.dirname(fs.realpathSync(__filename)), '../gfo.js')),
+    urlToProcess;
+
+process.argv.forEach(function(arg) {
+    var keyVal = arg.split('='),
+        isGoogleFontsUrl = false;
+
+    if (keyVal[0] == 'outDir') {
+        gfo.setOutputDir(keyVal[1]);
+        return;
+    }
+
+    if (keyVal[0] == 'outCss') {
+        gfo.setCssFilename(keyVal[1]);
+        return;
+    }
+
+    isGoogleFontsUrl = url.parse(arg).hostname == 'fonts.googleapis.com';
+
+    if (isGoogleFontsUrl) {
+        urlToProcess = arg;
+    }
+});
+
+if (!urlToProcess) {
+    console.log();
+    console.log('  No job found. Use URL like it Google Fonts says as script argument.');
+    console.log();
+    console.log('  Usage:');
+    console.log('    node gfo.js fontUrl');
+    console.log();
+    console.log('  Example:');
+    console.log('    node gfo.js "http://fonts.googleapis.com/css?family=Open+Sans|Roboto"');
+    console.log();
+
+    process.exit(0);
+}
+
+gfo.download(urlToProcess);

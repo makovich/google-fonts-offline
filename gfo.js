@@ -2,12 +2,11 @@ var fs = require('fs'),
     path = require('path'),
     stream = require('stream'),
     url = require('url'),
-    http = require('http');
-
+    http = require('http'),
 
     //                                            Group[0]
     //                                            vvvvvvvv
-var fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
+    fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
     //
     //                             Group[1]                               Group[2]
     //                             vvvvvv                                 vvvvvv
@@ -22,6 +21,7 @@ var fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
 
     scriptOutputDir = 'fonts',
     cssFilename = 'fonts.css',
+
     fontFaceBulletproofStyle = fs.readFileSync('fontface.css.tpl').toString();
 
     fileExts = {
@@ -52,46 +52,53 @@ var fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
     fontfaceList = {},
     requestsInProgress = 0,
 
-    urlToProcess = process.argv[2] || '', // only one URL allowed
+    urlToProcess = '',
 
     httpOptions = {
-        'hostname' : url.parse(urlToProcess).hostname,
-        'path' : url.parse(urlToProcess).path,
+        'hostname' : '',
+        'path' : '',
         'headers' : {}
     };
 
+exports.setOutputDir = function (dirName) {
+    scriptOutputDir = dirName || scriptOutputDir;
+};
 
-if (urlToProcess === '') {
-    console.log();
-    console.log('  No job found. Use URL like it Google Fonts says as script argument.');
-    console.log();
-    console.log('  Usage:');
-    console.log('    node gfo.js fontUrl');
-    console.log();
-    console.log('  Example:');
-    console.log('    node gfo.js "http://fonts.googleapis.com/css?family=Open+Sans|Roboto"');
-    console.log();
-    process.exit(0);
+exports.setCssFilename = function (filename) {
+    cssFilename = filename || cssFilename;
+};
+
+exports.download = function (urlToProcess) {
+
+    if (!urlToProcess) {
+        console.log('No URL to process! Use something like this: http://fonts.googleapis.com/css?family=Open+Sans|Roboto');
+        process.exit(0);
+    }
+
+    httpOptions.hostname = url.parse(urlToProcess).hostname;
+    httpOptions.path = url.parse(urlToProcess).path;
+
+    createOutputDir(scriptOutputDir);
+    processGoogleFontsUrl(urlToProcess);
+
+    (function awaitHttpRequests () {
+
+        setTimeout(function () {
+
+            requestsInProgress > 0 ? awaitHttpRequests() : buildOutputCssFile();
+
+        }, 50);
+
+    }());
+};
+
+function createOutputDir (dirName) {
+    var dirPath = path.join(process.cwd(), dirName);
+
+    fs.exists(dirPath, function (exists) {
+        if(!exists) fs.mkdirSync(dirPath);
+    });
 }
-
-// Step 0. Create output directory
-fs.exists(scriptOutputDir, function (exists) {
-    if(!exists) fs.mkdirSync(scriptOutputDir);
-});
-
-// Step 1. Run CSS and fonts downloading
-processGoogleFontsUrl(userAgents.shift());
-
-// Wait until all http requests are finished - then compose fonts.css
-(function awaitHttpRequests () {
-
-    setTimeout(function () {
-
-        requestsInProgress > 0 ? awaitHttpRequests() : buildOutputCssFile();
-
-    }, 50);
-
-}());
 
 function processGoogleFontsUrl (userAgent) {
 
@@ -179,7 +186,6 @@ function downloadFont(url, filename) {
     .on('error', handleHttpError);
 }
 
-// Step 2. Compose output CSS file
 function buildOutputCssFile () {
     var i,
         fontKey,
