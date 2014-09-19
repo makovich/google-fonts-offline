@@ -49,13 +49,13 @@ goofoffline outDir=tmp outCss=gf.css "http://fonts.googleapis.com/css?family=Ubu
 
 ### .net/mono scriptcs
 
-With [scriptcs](http://scriptcs.net/) download `goofoffline.csx` into your working directory and then use your Google Fonts link:
+With [scriptcs](http://scriptcs.net/) download `goofoffline.csx` and `fontface.css.tpl` into your working directory and then use your Google Fonts link:
 
 ```
 scriptcs goofoffline.csx -- "http://fonts.googleapis.com/css?family=Ubuntu:200italic"
 ```
 
-> Notice! Powershell need escape double dash with backtick symbol, i.e. ```--`` instead of `--`.
+> Notice! Powershell need escape double dash with backtick symbol, i.e. `` `--  `` instead of ` -- `.
 
 Checkout your new shiny `fonts` directory and `fonts.css` file.
 
