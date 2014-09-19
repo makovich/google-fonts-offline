@@ -11,13 +11,13 @@ if (Env.ScriptArgs.Count == 0)
     Console.WriteLine("  No job found. Use URL like it Google Fonts says as script argument.");
     Console.WriteLine();
     Console.WriteLine("  Usage:");
-    Console.WriteLine("    scriptcs gfo.csx -- fontUrl");
+    Console.WriteLine("    scriptcs goofoffline.csx -- fontUrl");
     Console.WriteLine();
     Console.WriteLine("  Example:");
-    Console.WriteLine("    scriptcs gfo.csx -- \"http://fonts.googleapis.com/css?family=Open+Sans|Roboto\"");
+    Console.WriteLine("    scriptcs goofoffline.csx -- \"http://fonts.googleapis.com/css?family=Open+Sans|Roboto\"");
     Console.WriteLine();
     Console.WriteLine("  With PowerShell:");
-    Console.WriteLine("    scriptcs gfo.csx `-- \"http://fonts.googleapis.com/css?family=Open+Sans|Roboto\"");
+    Console.WriteLine("    scriptcs goofoffline.csx `-- \"http://fonts.googleapis.com/css?family=Open+Sans|Roboto\"");
     Console.WriteLine();
     
     Environment.Exit(0);
