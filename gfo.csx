@@ -98,16 +98,15 @@ void ProcessGoogleFontsUrl(string userAgent)
 
     foreach (Match fontfaceOccurence in Regex.Matches(css, FontFaceRulePattern))
     {
-        ProcessFontface(fontfaceOccurence);
+        ProcessFontface(fontfaceOccurence.Value);
     }
 }
 
-void ProcessFontface(Match fontface)
+void ProcessFontface(string fontface)
 {
-    var currentFontFace = fontface.Value;
-    var fontFaceKey = ComposeFontFaceKey(currentFontFace);
+    var fontFaceKey = ComposeFontFaceKey(fontface);
 
-    foreach (Match fontUrlOccurence in Regex.Matches(currentFontFace, FontUrlPattern))
+    foreach (Match fontUrlOccurence in Regex.Matches(fontface, FontUrlPattern))
     {
         var url = fontUrlOccurence.Groups[1].Value;
         var format = fontUrlOccurence.Groups[2].Value;
