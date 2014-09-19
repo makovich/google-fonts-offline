@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 if (Env.ScriptArgs.Count == 0)
 {
@@ -38,7 +39,7 @@ const string FontFamilyPattern   = @"font-family\s*\:\s*[\'""]?([^\;]+?)[\'""]?\
 const string FontWeightPattern   = @"font-weight\s*\:\s*[\'""]?([^\;]+?)[\'""]?\;";
 const string FontStylePattern    =  @"font-style\s*\:\s*[\'""]?([^\;]+?)[\'""]?\;";
 
-string _scriptOutputDir          = "fonts",
+string _outputDir                = Path.Combine(Directory.GetCurrentDirectory(), "fonts"),
        _cssFilename              = "fonts.css",
        _fontFaceBulletproofStyle = File.ReadAllText("fontface.css.tpl");
 
@@ -70,16 +71,15 @@ var _userAgents = new string[]
     // WOFF2 for Chrome ("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103")
 };
 var _urlToProcess = Env.ScriptArgs[0];
+var _fontDownloadingTasks = new List<Task>();
 
 // Step 0. Create directory if it does not exist
-var _outputDir = Path.Combine(Directory.GetCurrentDirectory(), _scriptOutputDir);
-if (!Directory.Exists(_outputDir))
-{
-    Directory.CreateDirectory(_outputDir);
-}
+CreateOutputDirectory();
 
 // Step 1. Lookup and download all fonts from user URLs
+Console.WriteLine("Downloading started...");
 Array.ForEach(_userAgents, ProcessGoogleFontsUrl);
+Task.WaitAll(_fontDownloadingTasks.ToArray());
 
 // Step 2. Build CSS
 Console.WriteLine("Composing CSS file...");
@@ -91,8 +91,6 @@ void ProcessGoogleFontsUrl(string userAgent)
 {
     var client = new WebClient();
     client.Headers["User-Agent"] = userAgent;
-    
-    Console.WriteLine("Mimics to {0}", userAgent);
 
     var css = client.DownloadString(_urlToProcess);
 
@@ -104,25 +102,36 @@ void ProcessGoogleFontsUrl(string userAgent)
 
 void ProcessFontface(string fontface)
 {
-    var fontFaceKey = ComposeFontFaceKey(fontface);
+    var fontfaceKey = ComposeFontFaceKey(fontface);
 
     foreach (Match fontUrlOccurence in Regex.Matches(fontface, FontUrlPattern))
     {
         var url = fontUrlOccurence.Groups[1].Value;
         var format = fontUrlOccurence.Groups[2].Value;
 
-        if ( !(_fontfaceList[fontFaceKey] ?? string.Empty).Contains(url) )
+        if ( !(_fontfaceList[fontfaceKey] ?? string.Empty).Contains(url) )
         {
-            var filePath = Path.Combine(_outputDir, fontFaceKey.Replace(' ', '+').Replace(':', '_') + _fileExts[format]);
+            _fontDownloadingTasks.Add(
 
-            Console.WriteLine("  Downloading {0} as {1}...", fontFaceKey, format);
-            
-            File.WriteAllBytes(filePath, new WebClient().DownloadData(url));
+                new WebClient()
+                        .DownloadDataTaskAsync(url)
+                        .ContinueWith(t => {
 
-            _fontfaceList.Add(fontFaceKey, string.Format("{0}|{1}", format, url));
+                            var filePath = Path.Combine(_outputDir, fontfaceKey.Replace(' ', '+').Replace(':', '_') + _fileExts[format]);
+                            File.WriteAllBytes(filePath, t.Result);
+
+                            lock (_fontfaceList)
+                            {
+                                _fontfaceList.Add(fontfaceKey, string.Format("{0}|{1}", format, url));
+                            }
+
+                            Console.WriteLine("  {0}\t({1})", fontfaceKey, format);
+                        })
+            );
         }
     }
 }
+
 string ComposeFontFaceKey(string css)
 {
     var family = Regex.Match(css, FontFamilyPattern).Groups[1].Value;
@@ -134,16 +143,16 @@ string ComposeFontFaceKey(string css)
 
 void BuildOutputCssFile()
 {
-    foreach (var fontFaceKey in _fontfaceList.AllKeys)
+    foreach (var fontfaceKey in _fontfaceList.AllKeys)
     {
         var css = new String(_fontFaceBulletproofStyle.ToCharArray());
-        var splittedArray = fontFaceKey.Split(':');
+        var splittedArray = fontfaceKey.Split(':');
         
         var fontFamily = splittedArray[0];
         var fontWeight = splittedArray[1];
         var fontStyle = splittedArray[2];
 
-        var fontFilename = fontFaceKey.Replace(' ', '+').Replace(':', '_');
+        var fontFilename = fontfaceKey.Replace(' ', '+').Replace(':', '_');
 
         css = css
             .Replace("{{fontFilename}}", fontFilename)
@@ -151,7 +160,7 @@ void BuildOutputCssFile()
             .Replace("{{fontWeight}}", fontWeight)
             .Replace("{{fontStyle}}", fontStyle);
 
-        foreach (var fontsUrl in _fontfaceList.GetValues(fontFaceKey))
+        foreach (var fontsUrl in _fontfaceList.GetValues(fontfaceKey))
         {
             var formatProps = fontsUrl.Split('|');
             var format = formatProps[0];
@@ -161,5 +170,13 @@ void BuildOutputCssFile()
         }
 
         File.AppendAllText(Path.Combine(_outputDir, _cssFilename), css);
+    }
+}
+
+void CreateOutputDirectory()
+{
+    if (!Directory.Exists(_outputDir))
+    {
+        Directory.CreateDirectory(_outputDir);
     }
 }
