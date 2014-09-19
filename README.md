@@ -1,4 +1,4 @@
-# Google Fonts Offline — use Google Fonts locally
+# Google Fonts Offline
 
 [![NPM](https://nodei.co/npm/google-fonts-offline.png?mini=true)](https://nodei.co/npm/google-fonts-offline/)
 
@@ -33,7 +33,7 @@ With Node.js install package (prefer global):
 npm install -g google-fonts-offline
 ```
 
-Then use links from Quick Use ar your collection as an argument:
+Then use links from Quick Use or your collection as an argument:
 
 ```
 goofoffline "http://fonts.googleapis.com/css?family=Open+Sans"
