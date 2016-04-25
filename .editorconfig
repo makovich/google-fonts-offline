@@ -1,0 +1,9 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+[goofoffline]
+#a bin script, i.e. a node script with shebang MUST be lf, otherwise it won't work on POSIX
+#-> https://github.com/npm/npm/issues/4607
+end_of_line = lf
+charset = utf-8
