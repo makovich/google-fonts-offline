@@ -1,8 +1,11 @@
 {
   "name": "google-fonts-offline",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Use Google Fonts while you offline or in development.",
   "author": "Paul Makovich <makovich@great.pm>",
+  "contributors": [
+    "Christian Ulbrich (https://github.com/ChristianUlbrich)"
+  ],
   "bin": {
     "goofoffline": "./bin/goofoffline"
   },

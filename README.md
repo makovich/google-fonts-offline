@@ -62,3 +62,8 @@ Checkout your new shiny `fonts` directory and `fonts.css` file.
 ## Little thoughts
 
 I've test this scripts just with Google Fonts but I think it should works with any stylesheets URLs with `@font-face` declarations.
+
+
+## Contributors
+
+* [Christian Ulbrich](https://github.com/ChristianUlbrich)
