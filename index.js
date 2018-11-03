@@ -79,7 +79,7 @@ exports.download = function (urlToProcess) {
     httpOptions.path = url.parse(urlToProcess).path;
 
     createOutputDir(scriptOutputDir);
-    processGoogleFontsUrl(urlToProcess);
+    processGoogleFontsUrl(userAgents.shift());
 
     (function awaitHttpRequests () {
 
@@ -101,7 +101,6 @@ function createOutputDir (dirName) {
 }
 
 function processGoogleFontsUrl (userAgent) {
-
     if (!userAgent) return;
 
     console.log("Mimics to %s...", userAgent);
