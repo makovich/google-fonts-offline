@@ -10,7 +10,7 @@ var fs = require('fs'),
     //
     //                             Group[1]                               Group[2]
     //                             vvvvvv                                 vvvvvv
-    fontUrlPattern = /url\([\'\"]?([^\)]+?)[\'\"]?\)(?:\s*format\([\'\"]?([^\)]+?)[\'\"]?\))/gi,
+    fontUrlPattern = /url\([\'\"]?([^\)]+?)[\'\"]?\)(?:\s*format\([\'\"]?([^\)]+?)[\'\"]?\))?/gi,
     //
     //                                             Group[1]
     //                   Group[0]                  vvvvvvv
@@ -27,12 +27,13 @@ var fs = require('fs'),
     fileExts = {
         "embedded-opentype" : ".eot",
         "woff" : ".woff",
+        "woff2" : ".woff2",
         "truetype" : ".ttf",
         "svg" : ".svg"
     },
     userAgents = [
         // EOT lives in IE
-        "Mozilla/5.0 (MSIE 9.0; Windows NT 6.1; Trident/5.0)",
+        "Mozilla/5.0 (MSIE 8.0; Windows NT 6.1; Trident/4.0)",
 
         // WOFF for Windows
         "Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1",
@@ -41,12 +42,13 @@ var fs = require('fs'),
         "Opera/9.80 (Macintosh; Intel Mac OS X; U; en) Presto/2.2.15 Version/10.00",
 
         // SVG loves iPad
-        "Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10"
+        "Mozilla/5.0 (iPad; U; CPU OS 3_2 like Mac OS X; en-us) AppleWebKit/531.21.10 (KHTML, like Gecko) Version/4.0.4 Mobile/7B334b Safari/531.21.10",
 
         // WOFF for *nix ("Mozilla/5.0 (Linux; Android 4.1.1; Nexus 7 Build/JRO03D) AppleWebKit/535.19 (KHTML, like Gecko) Chrome/18.0.1025.166  Safari/535.19")
         // http://michaelboeke.com/blog/2013/09/10/Self-hosting-Google-web-fonts/
 
-        // WOFF2 for Chrome ("Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.103")
+        // WOFF2 for Safari
+        "Mozilla/5.0 (Windows NT 6.1; rv:43.0) Gecko/20100101 Firefox/43.0",
     ],
 
     fontfaceList = {},
@@ -60,15 +62,15 @@ var fs = require('fs'),
         'headers' : {}
     };
 
-exports.setOutputDir = function (dirName) {
+exports.setOutputDir = function(dirName) {
     scriptOutputDir = dirName || scriptOutputDir;
 };
 
-exports.setCssFilename = function (filename) {
+exports.setCssFilename = function(filename) {
     cssFilename = filename || cssFilename;
 };
 
-exports.download = function (urlToProcess) {
+exports.download = function(urlToProcess) {
 
     if (!urlToProcess) {
         console.log('No URL to process! Use something like this: http://fonts.googleapis.com/css?family=Open+Sans|Roboto');
@@ -81,9 +83,9 @@ exports.download = function (urlToProcess) {
     createOutputDir(scriptOutputDir);
     processGoogleFontsUrl(userAgents.shift());
 
-    (function awaitHttpRequests () {
+    (function awaitHttpRequests() {
 
-        setTimeout(function () {
+        setTimeout(function() {
 
             requestsInProgress > 0 ? awaitHttpRequests() : buildOutputCssFile();
 
@@ -92,29 +94,29 @@ exports.download = function (urlToProcess) {
     }());
 };
 
-function createOutputDir (dirName) {
+function createOutputDir(dirName) {
     var dirPath = path.join(process.cwd(), dirName);
 
-    fs.exists(dirPath, function (exists) {
+    fs.exists(dirPath, function(exists) {
         if(!exists) fs.mkdirSync(dirPath);
     });
 }
 
-function processGoogleFontsUrl (userAgent) {
+function processGoogleFontsUrl(userAgent) {
     if (!userAgent) return;
 
     console.log("Mimics to %s...", userAgent);
 
     requestsInProgress += 1;
 
-    httpCallback = function (response) {
+    httpCallback = function(response) {
         var buffer = [];
 
-        response.on('data', function (chunk) {
+        response.on('data', function(chunk) {
             buffer.push(chunk);
         });
 
-        response.on('end', function () {
+        response.on('end', function() {
             var css = Buffer.concat(buffer).toString();
 
             css.match(fontFaceRulePattern).forEach(processFontface);
@@ -131,15 +133,17 @@ function processGoogleFontsUrl (userAgent) {
         .on('error', handleHttpError);
 }
 
-function processFontface (css) {
+function processFontface(css) {
     var urlMatches,
         fontKey = composeFontFaceKey(css);
 
     while ((urlMatches = fontUrlPattern.exec(css)) !== null) {
 
-        var fontUrlWithFormat = urlMatches[2] + '|' + urlMatches[1],
+        // eot have no "src(...) format(...)" form, only "src(...);"
+        var format = urlMatches[2] || "embedded-opentype";
+            fontUrlWithFormat = format + '|' + urlMatches[1],
             filename = fontKey.replace(/\s/g, '+').replace(/:/g, '_'),
-            extension = fileExts[urlMatches[2]];
+            extension = fileExts[format];
 
         // There is no font in collection with such a fontKey
         if (!fontfaceList[fontKey]) {
@@ -169,14 +173,14 @@ function downloadFont(url, filename) {
 
     requestsInProgress += 1;
 
-    http.get(url, function (response) {
+    http.get(url, function(response) {
         var buffer = [];
 
-        response.on('data', function (chunk) {
+        response.on('data', function(chunk) {
             buffer.push(chunk);
         });
 
-        response.on('end', function () {
+        response.on('end', function() {
             fs.writeFileSync(path.join(scriptOutputDir, filename), Buffer.concat(buffer));
             requestsInProgress -= 1;
         });
@@ -184,7 +188,7 @@ function downloadFont(url, filename) {
     .on('error', handleHttpError);
 }
 
-function buildOutputCssFile () {
+function buildOutputCssFile() {
     var i,
         fontKey,
         splittedArray,
@@ -229,7 +233,7 @@ function buildOutputCssFile () {
     console.log('Done!');
 }
 
-function handleHttpError (error) {
+function handleHttpError(error) {
     requestsInProgress -= 1;
     console.log('Request error: %s', error.message);
 }
