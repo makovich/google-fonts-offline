@@ -1,8 +1,8 @@
 {
   "name": "google-fonts-offline",
-  "version": "0.1.2",
-  "description": "Use Google Fonts while you offline or in development.",
-  "author": "Paul Makovich <makovich@great.pm>",
+  "version": "0.1.5",
+  "description": "Use Google Fonts while you're offline or in development.",
+  "author": "PM <paul@makovi.ch>",
   "contributors": [
     "Christian Ulbrich (https://github.com/ChristianUlbrich)"
   ],
@@ -26,5 +26,5 @@
     "local"
   ],
   "preferGlobal": true,
-  "license": "CC"
+  "license": "Unlicense"
 }
