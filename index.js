@@ -36,7 +36,7 @@ var fs = require('fs'),
 
         // WOFF for Windows
         "Mozilla/5.0 (Windows NT 6.1; rv:2.0.1) Gecko/20100101 Firefox/4.0.1",
-        
+
         // TTF needs Opera
         "Opera/9.80 (Macintosh; Intel Mac OS X; U; en) Presto/2.2.15 Version/10.00",
 
@@ -117,7 +117,7 @@ function processGoogleFontsUrl (userAgent) {
 
         response.on('end', function () {
             var css = Buffer.concat(buffer).toString();
-            
+
             css.match(fontFaceRulePattern).forEach(processFontface);
 
             requestsInProgress -= 1;
@@ -166,7 +166,6 @@ function composeFontFaceKey(css) {
 }
 
 function downloadFont(url, filename) {
-    
     console.log("  Downloading %s...", filename);
 
     requestsInProgress += 1;
@@ -216,7 +215,7 @@ function buildOutputCssFile () {
 
         for (i = fontfaceList[fontKey].length - 1; i >= 0; i--) {
             splittedArray = fontfaceList[fontKey][i].split('|');
-            
+
             fontFormat = splittedArray[0];
             fontGoogleFontsUrl = splittedArray[1];
 
