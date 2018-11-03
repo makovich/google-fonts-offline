@@ -178,7 +178,7 @@ function downloadFont(url, filename) {
         });
 
         response.on('end', function () {
-            fs.writeFile(path.join(scriptOutputDir, filename), Buffer.concat(buffer));
+            fs.writeFileSync(path.join(scriptOutputDir, filename), Buffer.concat(buffer));
             requestsInProgress -= 1;
         });
     })
