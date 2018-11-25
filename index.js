@@ -3,7 +3,8 @@ var fs = require('fs'),
     stream = require('stream'),
     url = require('url'),
     http = require('http'),
-
+	downloadcounter = 0,
+	urlLinks = [],
     //                                            Group[0]
     //                                            vvvvvvvv
     fontFaceRulePattern = /(?:@font-face\s*\{\s*)([^\{\}]+)/gi,
@@ -21,7 +22,8 @@ var fs = require('fs'),
 
     scriptOutputDir = 'fonts',
     cssFilename = 'fonts.css',
-
+	
+	
     fontFaceBulletproofStyle = fs.readFileSync(path.join(path.dirname(fs.realpathSync(__filename)), 'fontface.css.tpl')).toString();
 
     fileExts = {
@@ -31,7 +33,8 @@ var fs = require('fs'),
         "truetype" : ".ttf",
         "svg" : ".svg"
     },
-    userAgents = [
+	userAgents = [],
+    muserAgents = [
         // EOT lives in IE
         "Mozilla/5.0 (MSIE 8.0; Windows NT 6.1; Trident/4.0)",
 
@@ -62,6 +65,11 @@ var fs = require('fs'),
         'headers' : {}
     };
 
+
+exports.setCompleted = function(completed) {
+    iscompleted = completed;
+};
+	
 exports.setOutputDir = function(dirName) {
     scriptOutputDir = dirName || scriptOutputDir;
 };
@@ -70,28 +78,49 @@ exports.setCssFilename = function(filename) {
     cssFilename = filename || cssFilename;
 };
 
+exports.getOutputDir = function() {
+    return scriptOutputDir;
+};
+
+exports.getCssFilename = function() {
+     return cssFilename;
+};
+
+exports.multidownload=function(urlLink){
+	urlLinks = urlLink.concat();
+	startMultidownload();
+}
+
+function startMultidownload(){
+	userAgents = muserAgents.concat();
+	if(downloadcounter<urlLinks.length){
+		var link=urlLinks[downloadcounter++];
+		module.exports.download(link);
+	}else{
+		buildOutputCssFile();
+	}
+}
+
 exports.download = function(urlToProcess) {
 
     if (!urlToProcess) {
         console.log('No URL to process! Use something like this: http://fonts.googleapis.com/css?family=Open+Sans|Roboto');
         process.exit(0);
     }
+	
+	httpOptions.hostname = url.parse(urlToProcess).hostname;
+	httpOptions.path = url.parse(urlToProcess).path;
 
-    httpOptions.hostname = url.parse(urlToProcess).hostname;
-    httpOptions.path = url.parse(urlToProcess).path;
-
-    createOutputDir(scriptOutputDir);
-    processGoogleFontsUrl(userAgents.shift());
-
-    (function awaitHttpRequests() {
-
-        setTimeout(function() {
-
-            requestsInProgress > 0 ? awaitHttpRequests() : buildOutputCssFile();
-
-        }, 50);
-
-    }());
+	createOutputDir(scriptOutputDir);
+	processGoogleFontsUrl(userAgents.shift());
+	
+	(function awaitHttpRequests() {
+	setTimeout(function() {
+		//console.log('requests: ' + requestsInProgress + " | downloadcounter: " + downloadcounter);
+		//requestsInProgress > 0 ? awaitHttpRequests() : buildOutputCssFile();
+		requestsInProgress > 0 ? awaitHttpRequests() : startMultidownload()
+	}, 50);
+	}());
 };
 
 function createOutputDir(dirName) {
@@ -124,6 +153,7 @@ function processGoogleFontsUrl(userAgent) {
             requestsInProgress -= 1;
 
             processGoogleFontsUrl(userAgents.shift());
+		
         });
     };
 
@@ -131,6 +161,7 @@ function processGoogleFontsUrl(userAgent) {
 
     http.get(httpOptions, httpCallback)
         .on('error', handleHttpError);
+		
 }
 
 function processFontface(css) {
@@ -231,6 +262,7 @@ function buildOutputCssFile() {
     }
 
     console.log('Done!');
+	
 }
 
 function handleHttpError(error) {

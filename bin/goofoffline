@@ -5,9 +5,11 @@ var path = require('path'),
     fs = require('fs'),
     url = require('url'),
     gfo = require(path.join(path.dirname(fs.realpathSync(__filename)), '../index.js')),
+	urls=[],
     urlToProcess;
 
 process.argv.forEach(function(arg) {
+	
     var keyVal = arg.split('='),
         isGoogleFontsUrl = false;
 
@@ -22,9 +24,22 @@ process.argv.forEach(function(arg) {
     }
 
     isGoogleFontsUrl = url.parse(arg).hostname == 'fonts.googleapis.com';
-
+	
     if (isGoogleFontsUrl) {
         urlToProcess = arg;
+		var fontSize = urlToProcess.lastIndexOf(':');
+		if( fontSize > 5){
+			var getSizes = urlToProcess.substring(fontSize + 1);
+			if(getSizes.indexOf(',')>-1){
+				var prefixUrl = urlToProcess.substring(0,fontSize+1);
+				var fsz = getSizes.split(',');
+				if(fsz.length > 1){
+					for( var i = 0; i < fsz.length; i++ ){
+						urls.push(prefixUrl + fsz[i]);
+					}
+				}
+			}
+		}
     }
 });
 
@@ -42,4 +57,9 @@ if (!urlToProcess) {
     process.exit(0);
 }
 
-gfo.download(urlToProcess);
+if(urls.length>0)
+	gfo.multidownload(urls);
+else
+	gfo.download(urlToProcess);
+
+
